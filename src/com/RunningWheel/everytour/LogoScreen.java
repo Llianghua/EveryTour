@@ -36,7 +36,7 @@ public class LogoScreen extends Activity {
         					ms += 100;
         				}
         			}
-        			startActivity(new Intent(getApplicationContext(),MainScreen.class));
+        			startActivity(new Intent(getApplicationContext(),NotSignedIn.class));
         		}
         		catch(Exception ex)
         		{

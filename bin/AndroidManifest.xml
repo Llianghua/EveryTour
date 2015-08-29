@@ -29,6 +29,9 @@
         </activity>
         <activity 
             android:name="com.RunningWheel.everytour.MainScreen" />
+        <activity 
+            android:name="com.RunningWheel.everytour.Signup"></activity>
+        <activity android:name="com.RunningWheel.everytour.NotSignedIn"></activity>
     </application>
 
 </manifest>

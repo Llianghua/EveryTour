@@ -1,8 +1,23 @@
 package com.RunningWheel.everytour;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
@@ -21,7 +36,7 @@ import android.widget.TextView;
 
 public class MainScreen extends Activity {
 
-	final String baidu_icon = "http://www.baidu.com/img/bd_logo1.png";
+	final String requestURL = "http://evertour.sinaapp.com/android_request.php";
 	final int MY_TEXT_VIEW_ID = 0x88888888;
 
 	int screenWidth, screenHeight;
@@ -32,7 +47,7 @@ public class MainScreen extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_screen);
 
-		getScreenSize();
+		JSONArray most8HotPlaceJSONArray = getHotPlaceJSONArray(requestURL,0,7);
 
 		hotPlaceGrid = (GridLayout) findViewById(R.id.main_screen_hot_place_grid);
 		for (int i = 0; i < 8; i++) {
@@ -73,36 +88,52 @@ public class MainScreen extends Activity {
 		Log.i("MainScreen", "content view has set.");
 	}
 
-	public Bitmap getHttpBitmap(String httpBitmap) {
-		URL myFileURL;
-		Bitmap bitmap = null;
-		try {
-			myFileURL = new URL(httpBitmap);
-
-			// 获得连接
-			HttpURLConnection conn = (HttpURLConnection) myFileURL
-					.openConnection();
-
-			// 设置超时时间为6000毫秒，conn.setConnectTiemeout(0)表示没有时间限制
-			conn.setConnectTimeout(6000);
-
-			// 连接设置获得数据流
-			conn.setDoInput(true);
-
-			// 不使用缓存
-			conn.setUseCaches(false);
-
-			// 得到数据流
-			InputStream is = conn.getInputStream();
-
-			// 解析得到图片
-			bitmap = BitmapFactory.decodeStream(is);
-
-			is.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
+	public JSONArray getHotPlaceJSONArray(String httpBitmap,int start,int end) {
+		HttpPost httpRequest = new HttpPost(requestURL);
+		
+		//NameValuePair实现请求参数的封装
+		List<NameValuePair> params = new ArrayList<NameValuePair>();
+		params.add(new BasicNameValuePair("requestType","hotplace"));
+		params.add(new BasicNameValuePair("start",String.valueOf(start)));
+		params.add(new BasicNameValuePair("end",String.valueOf(end)));
+		
+		try
+		{
+			//添加请求参数到请求对象
+			httpRequest.setEntity( new UrlEncodedFormEntity(params,HTTP.UTF_8));
+			
+			//发送请求并等待响应
+			HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
+			
+			//若状态码为200则ok
+			if(httpResponse.getStatusLine().getStatusCode() == 200)
+			{
+				String strResult = EntityUtils.toString(httpResponse.getEntity());
+				JSONArray result = new JSONArray(strResult);
+				return result;
+			}
+			else
+			{
+				Log.e("MainScreen:Http Post","Error Response: "+httpResponse.getStatusLine().toString());
+				return null;
+			}
 		}
-		return bitmap;
+		catch(ClientProtocolException e)
+		{
+			Log.e("MainScreen:Http Post",e.getMessage().toString());
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			Log.e("MainScreen:Http Post",e.getMessage().toString());
+			e.printStackTrace();
+		}
+		catch(Exception e)
+		{
+			Log.e("MainScreen:Http Post",e.getMessage().toString());
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	void getScreenSize() {
